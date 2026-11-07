@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SGH - Sistema de Gestión Horaria Escolar</title>
+  <link rel="stylesheet" href="./styles/output.css" />
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 select-none">
+
+  <!-- BARRA SUPERIOR PRINCIPAL -->
+  <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30 no-print">
+    <!-- Branding e Institución -->
+    <div class="flex items-center gap-3.5">
+      <div id="header-logo-container" class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-900/40 font-black text-base tracking-wider text-white overflow-hidden shrink-0 border border-blue-400/20">
+        <span id="header-siglas">SGH</span>
+        <img id="header-logo-img" src="" alt="Logo del Colegio" class="hidden w-full h-full object-cover" />
+      </div>
+      <div class="flex flex-col justify-center">
+        <h1 id="header-colegio" class="font-black text-xl sm:text-2xl text-white tracking-tight leading-tight">
+          Sistema de Gestión Horaria Escolar
+        </h1>
+      </div>
+    </div>
+
+    <!-- Navegación Central de Vistas -->
+    <nav class="flex items-center bg-slate-950/90 p-1 rounded-xl border border-slate-800 gap-1 flex-wrap">
+      <button data-tab="dashboard" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-blue-600 text-white shadow">
+        📊 Resumen General
+      </button>
+      <button data-tab="curso" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+        🏫 Vista por Curso
+      </button>
+      <button data-tab="docente" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+        👩‍🏫 Vista por Docente
+      </button>
+      <button data-tab="alertas" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-1.5">
+        <span>🚨 Choques y Horas Libres</span>
+        <span id="nav-badge-choques" class="hidden px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-mono font-bold animate-pulse">0</span>
+        <span id="nav-badge-puente" class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-mono font-bold">0L</span>
+      </button>
+      <button data-tab="configuracion" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+        🏛️ Administración
+      </button>
+      <button data-tab="persistencia" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+        ⚙️ Configuración
+      </button>
+    </nav>
+
+    <!-- Controles de Deshacer/Rehacer y Modo Simulación -->
+    <div class="flex items-center gap-2">
+      <!-- Deshacer / Rehacer -->
+      <div class="flex items-center bg-slate-950 rounded-lg border border-slate-800 p-0.5">
+        <button id="btn-undo" disabled title="Deshacer última acción (Ctrl+Z)"
+          class="px-2.5 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none transition">
+          <span>↩ Deshacer</span>
+          <span id="badge-undo" class="px-1.5 py-0.2 bg-slate-800 text-slate-300 rounded text-[10px] font-mono">0</span>
+        </button>
+        <div class="w-px h-4 bg-slate-800"></div>
+        <button id="btn-redo" disabled title="Rehacer acción (Ctrl+Y)"
+          class="px-2.5 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none transition">
+          <span>↪ Rehacer</span>
+          <span id="badge-redo" class="px-1.5 py-0.2 bg-slate-800 text-slate-300 rounded text-[10px] font-mono">0</span>
+        </button>
+      </div>
+
+      <!-- Botón Abrir Simulaciones Guardadas -->
+      <button id="btn-abrir-simulaciones" title="Guardar o cargar simulaciones de horarios"
+        class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
+        <span>📂 Simulaciones</span>
+      </button>
+
+      <!-- Botón Activar Modo Simulación / Borrador -->
+      <button id="btn-toggle-simulacion"
+        class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25">
+        <span>🧪 Activar Modo Simulación</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- BARRA FLOTANTE DE MODO SIMULACIÓN -->
+  <div id="banner-simulacion" class="hidden bg-gradient-to-r from-amber-950/90 via-amber-900/70 to-amber-950/90 border-b border-amber-500/40 px-4 py-2 no-print">
+    <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider animate-pulse">
+          🧪 MODO SIMULACIÓN ACTIVO
+        </span>
+        <span id="sim-active-name" class="hidden px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold"></span>
+        <p class="text-xs text-amber-100">
+          Estás probando cambios en un borrador seguro. El <strong>Horario Oficial</strong> no se modificará hasta que confirmes.
+        </p>
+        <div class="flex items-center gap-2 bg-slate-950/70 px-3 py-1 rounded-lg border border-amber-500/30 text-xs">
+          <span class="text-amber-300 font-semibold">Cambios:</span>
+          <span id="sim-diff-count" class="font-mono font-bold text-white">0 celdas</span>
+          <span class="text-slate-600">|</span>
+          <span class="text-amber-300 font-semibold">Δ Horas Libres:</span>
+          <span id="sim-diff-puente" class="font-mono font-bold text-emerald-400">0</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btn-guardar-simulacion"
+          class="px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow transition">
+          💾 Guardar Simulación
+        </button>
+        <button id="btn-cargar-simulacion-banner"
+          class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-amber-200 border border-amber-500/30 transition">
+          📂 Cargar Guardada
+        </button>
+        <button id="btn-ver-diff-simulacion"
+          class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-amber-200 border border-amber-500/30 transition">
+          🔍 Ver Resumen de Cambios
+        </button>
+        <button id="btn-confirmar-simulacion"
+          class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">
+          ✅ Confirmar como Horario Oficial
+        </button>
+        <button id="btn-descartar-simulacion"
+          class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-600/90 hover:bg-rose-500 text-white transition">
+          ✖ Descartar Simulación
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DINÁMICO -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 overflow-y-auto">
+    <!-- Vista 1: Dashboard / Arquitectura y Semilla -->
+    <section id="tab-dashboard" class="space-y-5"></section>
+
+    <!-- Vista 2: Vista por Curso -->
+    <section id="tab-curso" class="hidden space-y-4"></section>
+
+    <!-- Vista 3: Vista por Docente -->
+    <section id="tab-docente" class="hidden space-y-4"></section>
+
+    <!-- Vista Diagnóstico: Centro de Choques, Violaciones y Horas Puente -->
+    <section id="tab-alertas" class="hidden space-y-5"></section>
+
+    <!-- Vista 4: Configuración Escolar, ABM (Cursos, Materias, Docentes) y Disponibilidad "Pintar con el Mouse" -->
+    <section id="tab-configuracion" class="hidden space-y-5"></section>
+
+    <!-- Vista 5: Persistencia, Historial y Backups -->
+    <section id="tab-persistencia" class="hidden space-y-5"></section>
+  </main>
+
+  <!-- MODAL DE DIFERENCIAS DE SIMULACIÓN -->
+  <div id="modal-diff-simulacion" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[82vh] flex flex-col shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            🧪 Resumen de Cambios en Simulación vs. Horario Oficial
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Comparativa detallada entre el borrador actual y el Horario Oficial.
+          </p>
+        </div>
+        <button id="btn-cerrar-modal-diff" class="text-slate-400 hover:text-white text-lg font-bold px-2">✕</button>
+      </div>
+      <div id="modal-diff-body" class="p-5 overflow-y-auto space-y-4 text-xs"></div>
+      <div class="px-5 py-3 border-t border-slate-800 flex items-center justify-end gap-2 bg-slate-950/50 rounded-b-2xl">
+        <button id="btn-modal-descartar" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-600/80 hover:bg-rose-600 text-white">
+          ✖ Descartar Simulación
+        </button>
+        <button id="btn-modal-confirmar" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white">
+          ✅ Confirmar como Horario Oficial
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PARA GUARDAR Y CARGAR SIMULACIONES -->
+  <div id="modal-simulaciones" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            📂 Guardar y Cargar Simulaciones de Horarios
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Guarda tus borradores de horario para continuar trabajando en otro momento sin perder ningún avance.
+          </p>
+        </div>
+        <button id="btn-cerrar-modal-simulaciones" class="text-slate-400 hover:text-white text-lg font-bold px-2">✕</button>
+      </div>
+      <div id="modal-simulaciones-body" class="p-5 overflow-y-auto space-y-5 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- MODAL OBLIGATORIO DE PRE-CONFIRMACIÓN ("DETALLE DE IMPACTO DEL MOVIMIENTO" - FASE 4) -->
+  <div id="modal-confirmar-movimiento" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between gap-3">
+        <div>
+          <h3 id="modal-movimiento-titulo" class="text-base font-black text-white flex items-center gap-2">
+            🔍 Detalle de Impacto del Movimiento
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Revisa las materias, cursos, docentes afectados y la variación en horas libres antes de aplicar el cambio.
+          </p>
+        </div>
+        <button id="btn-cerrar-modal-movimiento" class="text-slate-400 hover:text-white text-lg font-bold px-2">✕</button>
+      </div>
+      <div id="modal-movimiento-body" class="p-5 overflow-y-auto space-y-4 text-xs"></div>
+      <div class="px-5 py-3.5 border-t border-slate-800 flex items-center justify-between gap-3 bg-slate-950/50 rounded-b-2xl flex-wrap">
+        <span class="text-[11px] text-slate-400">
+          💡 También puedes deshacer cualquier cambio luego con <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-mono">Ctrl+Z</kbd>
+        </span>
+        <div class="flex items-center gap-2">
+          <button id="btn-cancelar-modal-movimiento" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            Cancelar
+          </button>
+          <button id="btn-aplicar-modal-movimiento" class="px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition">
+            ✅ Aplicar Movimiento
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE MOVIMIENTO DESEADO / ASISTENTE DE COBERTURA HORARIA -->
+  <div id="modal-movimiento-deseado" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-black text-white flex items-center gap-2">
+            🎯 Movimiento Deseado (Asistente de Cobertura Horaria)
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Elige el curso, la materia o docente y el bloque que necesitas cubrir. El sistema calculará qué cambios o enroques hacer para lograrlo.
+          </p>
+        </div>
+        <button id="btn-cerrar-modal-deseado" class="text-slate-400 hover:text-white text-lg font-bold px-2">✕</button>
+      </div>
+      <div id="modal-deseado-body" class="p-5 overflow-y-auto space-y-4 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- NOTIFICACIÓN TOAST INFERIOR -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script src="./js/configAbm.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# Dependencias y binarios locales
+node_modules/
+.runtime/
+
+# Compilados y empaquetados portables
+dist/
+dist_portable/
+out/
+build/
+*.exe
+*.AppImage
+*.dmg
+
+# Persistencia de usuario en tiempo de ejecución (estado, backups, simulaciones y exportaciones)
+data/sgh_state.json
+data/sgh_state.json.tmp
+data/backups/*.json
+data/simulaciones/*.json
+data/exportaciones/
+data/temp_test_exports/
+
+# Logs de sistema y npm
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de sistema operativo y editores
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
